@@ -16,19 +16,31 @@
             --gold-solid: #f6d365;
             --text: #f1f5f9;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; }
         header { background: var(--card); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(246, 211, 101, 0.2); position: sticky; top: 0; z-index: 100; }
         .logo { font-size: 24px; font-weight: bold; background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
-        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; display: inline-block; text-decoration: none; }
         .btn-gold { background: var(--gold); color: #000; }
         .btn-outline { background: transparent; border: 1px solid var(--gold-solid); color: var(--gold-solid); }
+        .btn-danger { background: #ef4444; color: white; }
+        
         .admin-panel { display: none; max-width: 700px; margin: 20px auto; background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid rgba(246, 211, 101, 0.3); }
         .input-group { margin-bottom: 15px; }
         .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 12px; background: #000; border: 1px solid #334155; color: white; border-radius: 8px; box-sizing: border-box; }
+        
         .container { padding: 20px 5%; }
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
-        .movie-card { background: var(--card); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; padding-bottom: 15px; }
-        .movie-card:hover { border-color: var(--gold-solid); }
+        .movie-card { background: var(--card); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+        .movie-card:hover { border-color: var(--gold-solid); box-shadow: 0 0 20px rgba(246, 211, 101, 0.1); }
+        
+        .video-container { background: #000; min-height: 250px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .movie-info { padding: 20px; text-align: center; }
+        .movie-info h3 { color: var(--gold-solid); margin: 0 0 10px 0; }
+        .movie-info p { color: #94a3b8; font-size: 14px; margin-bottom: 15px; }
+        
+        .admin-btns { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: var(--card); padding: 40px; border-radius: 20px; border: 2px solid var(--gold-solid); width: 320px; text-align: center; }
     </style>
@@ -43,7 +55,7 @@
 </header>
 
 <div id="adminPanel" class="admin-panel">
-    <h2 style="color: var(--gold-solid); text-align: center;">Фильм Бошқаруви</h2>
+    <h2 style="color: var(--gold-solid); text-align: center;" id="formTitle">Фильм қўшиш</h2>
     <input type="hidden" id="editKey">
     <div class="input-group"><input type="text" id="mName" placeholder="Фильм номи"></div>
     <div class="input-group"><textarea id="mEmbed" rows="4" placeholder="Embed код (Youtube/Telegram)"></textarea></div>
@@ -53,10 +65,12 @@
             <option value="Детектив">Детектив</option>
             <option value="Триллер">Триллер</option>
             <option value="Мелодрама">Мелодрама</option>
+            <option value="Комедия">Комедия</option>
+            <option value="Қўрқинчли">Қўрқинчли</option>
         </select>
     </div>
     <button class="btn btn-gold" style="width: 100%;" onclick="saveToFirebase()">Серверга сақлаш</button>
-    <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="document.getElementById('adminPanel').style.display='none'">Ёпиш</button>
+    <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="closeAdmin()">Ёпиш</button>
 </div>
 
 <div class="container">
@@ -73,7 +87,6 @@
 </div>
 
 <script>
-    // Сизнинг Firebase калитларингиз
     const firebaseConfig = {
         apiKey: "AIzaSyAV9u_Go4bIuDlC-vM3rH1T9MwLGwe9H3I",
         authDomain: "universal-media-8f205.firebaseapp.com",
@@ -84,39 +97,46 @@
         appId: "1:21945142340:web:796e1d4e85566899b3c011"
     };
     
-    // Ишга тушириш
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     let isAdmin = false;
+    let allMovies = {};
 
-    // Маълумотларни тинглаш
     database.ref('movies').on('value', (snapshot) => {
-        render(snapshot.val());
+        allMovies = snapshot.val() || {};
+        render();
     });
 
-    function render(data) {
+    function render() {
         const grid = document.getElementById('movieGrid');
         grid.innerHTML = '';
-        if(!data) return;
-
-        Object.keys(data).forEach(key => {
-            const m = data[key];
+        
+        Object.keys(allMovies).forEach(key => {
+            const m = allMovies[key];
             const card = document.createElement('div');
             card.className = 'movie-card';
+            
+            let adminButtons = '';
+            if(isAdmin) {
+                adminButtons = `
+                    <div class="admin-btns">
+                        <button class="btn btn-outline" onclick="prepareEdit('${key}')">Таҳрир</button>
+                        <button class="btn btn-danger" onclick="deleteMovie('${key}')">Ўчириш</button>
+                    </div>
+                `;
+            }
+
             card.innerHTML = `
-                <div style="background:#000; min-height:350px; display:flex; align-items:center; justify-content:center;">${m.embed}</div>
-                <div style="padding:15px; text-align:center;">
-                    <h3 style="color:var(--gold-solid); margin:0;">${m.name}</h3>
+                <div class="video-container">${m.embed}</div>
+                <div class="movie-info">
+                    <h3>${m.name}</h3>
                     <p>#${m.genre}</p>
-                    ${isAdmin ? `
-                        <button class="btn btn-outline" onclick="editMovie('${key}', \`${m.name}\`, \`${m.genre}\`, \`${m.embed}\`)">Таҳрир</button>
-                        <button class="btn" style="background:#ef4444; color:white;" onclick="deleteMovie('${key}')">Ўчириш</button>
-                    ` : ''}
+                    ${adminButtons}
                 </div>
             `;
             grid.appendChild(card);
             
-            // Скриптларни қайта юклаш
+            // Telegram widgetlarini qayta yuklash
             const scripts = card.getElementsByTagName('script');
             for (let s of scripts) {
                 const newS = document.createElement('script');
@@ -134,40 +154,55 @@
 
         if(name && embed) {
             if(key) {
-                database.ref('movies/' + key).update({ name, embed, genre });
-                document.getElementById('editKey').value = "";
+                database.ref('movies/' + key).update({ name, embed, genre })
+                .then(() => { alert("Янгиланди!"); resetForm(); });
             } else {
-                database.ref('movies').push({ name, embed, genre });
+                database.ref('movies').push({ name, embed, genre })
+                .then(() => { alert("Қўшилди!"); resetForm(); });
             }
-            document.getElementById('mName').value = "";
-            document.getElementById('mEmbed').value = "";
-            alert("Сақланди!");
+        } else {
+            alert("Илтимос, ҳамма майдонни тўлдиринг!");
         }
     }
 
-    function deleteMovie(key) {
-        if(confirm("Ўчирилсинми?")) database.ref('movies/' + key).remove();
+    function prepareEdit(key) {
+        const m = allMovies[key];
+        document.getElementById('mName').value = m.name;
+        document.getElementById('mEmbed').value = m.embed;
+        document.getElementById('mGenre').value = m.genre;
+        document.getElementById('editKey').value = key;
+        document.getElementById('formTitle').innerText = "Фильмни таҳрирлаш";
+        document.getElementById('adminPanel').style.display = 'block';
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    function editMovie(key, name, genre, embed) {
-        document.getElementById('mName').value = name;
-        document.getElementById('mGenre').value = genre;
-        document.getElementById('mEmbed').value = embed;
-        document.getElementById('editKey').value = key;
-        document.getElementById('adminPanel').style.display = 'block';
-        window.scrollTo(0,0);
+    function resetForm() {
+        document.getElementById('mName').value = "";
+        document.getElementById('mEmbed').value = "";
+        document.getElementById('editKey').value = "";
+        document.getElementById('formTitle').innerText = "Фильм қўшиш";
+    }
+
+    function deleteMovie(key) {
+        if(confirm("Ростан ҳам ўчирмоқчимисиз?")) {
+            database.ref('movies/' + key).remove();
+        }
     }
 
     function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
     function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
+    function closeAdmin() { document.getElementById('adminPanel').style.display = 'none'; }
+
     function checkAuth() {
         if(document.getElementById('passInput').value === "1975") {
             isAdmin = true;
             closeLogin();
             document.getElementById('adminPanel').style.display = 'block';
-            document.getElementById('navBtns').innerHTML = '<button class="btn btn-outline" onclick="location.reload()">Чиқиш</button>';
-            database.ref('movies').once('value', s => render(s.val()));
-        } else { alert("Хато!"); }
+            document.getElementById('navBtns').innerHTML = '<button class="btn btn-danger" onclick="location.reload()">Чиқиш</button>';
+            render();
+        } else {
+            alert("Парол хато!");
+        }
     }
 </script>
 </body>
