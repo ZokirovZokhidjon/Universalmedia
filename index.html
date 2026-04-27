@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Media - Firebase Portal</title>
+    <title>Zokir Media - Firebase Portal</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -18,8 +18,40 @@
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; }
         header { background: var(--card); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(246, 211, 101, 0.2); position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 24px; font-weight: bold; background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
-        
+        /* ЯНГИ ЛОГОТИП СТИЛИ */
+.logo-container {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    gap: 10px; /* Иконка ва матн ораси */
+}
+
+/* Олтин рангли белги (Иконка) */
+.logo-icon {
+    width: 35px;
+    height: 35px;
+    background: var(--gold);
+    border-radius: 8px; /* Бурчакларини сал қайириш */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #16161e; /* Тўқ рангли ҳарф */
+    font-weight: bold;
+    font-size: 22px;
+    box-shadow: 0 0 10px rgba(246, 211, 101, 0.4);
+}
+
+/* Логотип матни (УНИВЕРСАЛМЕДИЯ) */
+.logo-text {
+    font-size: 24px;
+    font-weight: bold;
+    background: var(--gold);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px; /* Ҳарфлар орасини сал очиш */
+    text-transform: uppercase; /* Ҳаммаси катта ҳарфда */
+}
+
         .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; display: inline-block; text-decoration: none; }
         .btn-gold { background: var(--gold); color: #000; }
         .btn-outline { background: transparent; border: 1px solid var(--gold-solid); color: var(--gold-solid); }
@@ -48,7 +80,10 @@
 <body>
 
 <header>
-    <a href="#" class="logo">UNIVERSAL MEDIA</a>
+    <a href="index.html" class="logo-container">
+        <div class="logo-icon">U</div>
+        <div class="logo-text">UNIVERSAL MEDIA</div>
+    </a>
     <div id="navBtns">
         <button class="btn btn-gold" onclick="openLogin()">Шахсий кабинет</button>
     </div>
