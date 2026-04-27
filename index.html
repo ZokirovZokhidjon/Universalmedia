@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zokir Media - Firebase Portal</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: #16161e;
+            --gold: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            --gold-solid: #f6d365;
+            --text: #f1f5f9;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        header { background: var(--card); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(246, 211, 101, 0.2); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 24px; font-weight: bold; background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-gold { background: var(--gold); color: #000; }
+        .btn-outline { background: transparent; border: 1px solid var(--gold-solid); color: var(--gold-solid); }
+        .admin-panel { display: none; max-width: 700px; margin: 20px auto; background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid rgba(246, 211, 101, 0.3); }
+        .input-group { margin-bottom: 15px; }
+        .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 12px; background: #000; border: 1px solid #334155; color: white; border-radius: 8px; box-sizing: border-box; }
+        .container { padding: 20px 5%; }
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
+        .movie-card { background: var(--card); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; padding-bottom: 15px; }
+        .movie-card:hover { border-color: var(--gold-solid); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--card); padding: 40px; border-radius: 20px; border: 2px solid var(--gold-solid); width: 320px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="#" class="logo">ZOKIR MEDIA</a>
+    <div id="navBtns">
+        <button class="btn btn-gold" onclick="openLogin()">Шахсий кабинет</button>
+    </div>
+</header>
+
+<div id="adminPanel" class="admin-panel">
+    <h2 style="color: var(--gold-solid); text-align: center;">Фильм Бошқаруви</h2>
+    <input type="hidden" id="editKey">
+    <div class="input-group"><input type="text" id="mName" placeholder="Фильм номи"></div>
+    <div class="input-group"><textarea id="mEmbed" rows="4" placeholder="Embed код (Youtube/Telegram)"></textarea></div>
+    <div class="input-group">
+        <select id="mGenre">
+            <option value="Боевик">Боевик</option>
+            <option value="Детектив">Детектив</option>
+            <option value="Триллер">Триллер</option>
+            <option value="Мелодрама">Мелодрама</option>
+        </select>
+    </div>
+    <button class="btn btn-gold" style="width: 100%;" onclick="saveToFirebase()">Серверга сақлаш</button>
+    <button class="btn btn-outline" style="width: 100%; margin-top: 10px;" onclick="document.getElementById('adminPanel').style.display='none'">Ёпиш</button>
+</div>
+
+<div class="container">
+    <div class="movie-grid" id="movieGrid"></div>
+</div>
+
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <h2 style="color: var(--gold-solid);">Админ Кириш</h2>
+        <input type="password" id="passInput" style="width:100%; padding:12px; margin:20px 0; background:#000; color:white; border:1px solid var(--gold-solid); border-radius:8px; text-align:center;" placeholder="Парол">
+        <button class="btn btn-gold" style="width:100%;" onclick="checkAuth()">Кириш</button>
+        <button class="btn" style="color: #94a3b8; margin-top:10px; background:none;" onclick="closeLogin()">Бекор қилиш</button>
+    </div>
+</div>
+
+<script>
+    // Сизнинг Firebase калитларингиз
+    const firebaseConfig = {
+        apiKey: "AIzaSyAV9u_Go4bIuDlC-vM3rH1T9MwLGwe9H3I",
+        authDomain: "universal-media-8f205.firebaseapp.com",
+        databaseURL: "https://universal-media-8f205-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "universal-media-8f205",
+        storageBucket: "universal-media-8f205.firebasestorage.app",
+        messagingSenderId: "21945142340",
+        appId: "1:21945142340:web:796e1d4e85566899b3c011"
+    };
+    
+    // Ишга тушириш
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    let isAdmin = false;
+
+    // Маълумотларни тинглаш
+    database.ref('movies').on('value', (snapshot) => {
+        render(snapshot.val());
+    });
+
+    function render(data) {
+        const grid = document.getElementById('movieGrid');
+        grid.innerHTML = '';
+        if(!data) return;
+
+        Object.keys(data).forEach(key => {
+            const m = data[key];
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `
+                <div style="background:#000; min-height:350px; display:flex; align-items:center; justify-content:center;">${m.embed}</div>
+                <div style="padding:15px; text-align:center;">
+                    <h3 style="color:var(--gold-solid); margin:0;">${m.name}</h3>
+                    <p>#${m.genre}</p>
+                    ${isAdmin ? `
+                        <button class="btn btn-outline" onclick="editMovie('${key}', \`${m.name}\`, \`${m.genre}\`, \`${m.embed}\`)">Таҳрир</button>
+                        <button class="btn" style="background:#ef4444; color:white;" onclick="deleteMovie('${key}')">Ўчириш</button>
+                    ` : ''}
+                </div>
+            `;
+            grid.appendChild(card);
+            
+            // Скриптларни қайта юклаш
+            const scripts = card.getElementsByTagName('script');
+            for (let s of scripts) {
+                const newS = document.createElement('script');
+                for (let a of s.attributes) newS.setAttribute(a.name, a.value);
+                s.parentNode.replaceChild(newS, s);
+            }
+        });
+    }
+
+    function saveToFirebase() {
+        const name = document.getElementById('mName').value;
+        const embed = document.getElementById('mEmbed').value;
+        const genre = document.getElementById('mGenre').value;
+        const key = document.getElementById('editKey').value;
+
+        if(name && embed) {
+            if(key) {
+                database.ref('movies/' + key).update({ name, embed, genre });
+                document.getElementById('editKey').value = "";
+            } else {
+                database.ref('movies').push({ name, embed, genre });
+            }
+            document.getElementById('mName').value = "";
+            document.getElementById('mEmbed').value = "";
+            alert("Сақланди!");
+        }
+    }
+
+    function deleteMovie(key) {
+        if(confirm("Ўчирилсинми?")) database.ref('movies/' + key).remove();
+    }
+
+    function editMovie(key, name, genre, embed) {
+        document.getElementById('mName').value = name;
+        document.getElementById('mGenre').value = genre;
+        document.getElementById('mEmbed').value = embed;
+        document.getElementById('editKey').value = key;
+        document.getElementById('adminPanel').style.display = 'block';
+        window.scrollTo(0,0);
+    }
+
+    function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
+    function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
+    function checkAuth() {
+        if(document.getElementById('passInput').value === "1975") {
+            isAdmin = true;
+            closeLogin();
+            document.getElementById('adminPanel').style.display = 'block';
+            document.getElementById('navBtns').innerHTML = '<button class="btn btn-outline" onclick="location.reload()">Чиқиш</button>';
+            database.ref('movies').once('value', s => render(s.val()));
+        } else { alert("Хато!"); }
+    }
+</script>
+</body>
+</html>
