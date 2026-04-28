@@ -18,19 +18,17 @@
 
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; }
         
-        /* HEADER & NAVIGATION */
         header { 
             background: var(--card); padding: 15px 5%; display: flex; 
             justify-content: space-between; align-items: center; 
             border-bottom: 2px solid rgba(246, 211, 101, 0.3); 
             position: sticky; top: 0; z-index: 1000; 
         }
-        
+
         .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .logo-icon { width: 40px; height: 40px; background: var(--gold); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; font-size: 24px; }
         .logo-text { font-size: 22px; font-weight: bold; background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* ЖАНРЛАР БЎЛИМИ (ТУГМАЛАР) */
         .genre-nav { 
             display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; 
             padding: 20px 5%; background: rgba(255,255,255,0.02);
@@ -45,7 +43,6 @@
             box-shadow: 0 0 15px rgba(246, 211, 101, 0.3);
         }
 
-        /* АДМИН ПАНЕЛЬ */
         .admin-panel { 
             display: none; max-width: 900px; margin: 20px auto; 
             background: #1c1c24; padding: 25px; border-radius: 15px; 
@@ -56,29 +53,25 @@
             width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; box-sizing: border-box;
         }
 
-        /* КИНОЛАР ТАРМОҒИ */
         .container { padding: 0 5%; }
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; margin-top: 20px; }
         .movie-card { background: var(--card); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
         .movie-card:hover { transform: translateY(-5px); border-color: var(--gold-solid); }
+        
         .video-container { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .movie-info { padding: 15px; text-align: center; }
-        .movie-info h3 { color: var(--gold-solid); margin: 0 0 5px 0; }
+        
+        .movie-info { padding: 15px; }
+        .movie-info h3 { color: var(--gold-solid); margin: 0 0 5px 0; font-size: 18px; }
+        
+        /* СТАТИСТИКА УЧУН СТИЛЛАР */
+        .stats-bar { display: flex; justify-content: space-around; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .stat-btn { background: none; border: none; color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 14px; transition: 0.2s; }
+        .stat-btn:hover { color: #f6d365; }
 
-        /* ЯРҚИРАГАН ЛОГИН КАРТОЧКАСИ (MODAL) */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
-        .admin-card { 
-            background: #16161e; border: 2px solid #f6d365; border-radius: 25px; padding: 40px; width: 340px;
-            text-align: center; box-shadow: 0 0 30px rgba(246, 211, 101, 0.4); animation: zoomIn 0.3s ease;
-        }
-        @keyframes zoomIn { from { transform: scale(0.7); } to { transform: scale(1); } }
-        .card-icon { font-size: 45px; margin-bottom: 15px; }
-        .card-title { color: #f6d365; letter-spacing: 2px; margin-bottom: 25px; }
-        .card-input { 
-            width: 100%; background: #000; border: 1px solid #334155; border-radius: 12px; padding: 15px; 
-            color: #f6d365; font-size: 24px; text-align: center; letter-spacing: 10px; outline: none; margin-bottom: 20px;
-        }
+        .admin-card { background: #16161e; border: 2px solid #f6d365; border-radius: 25px; padding: 40px; width: 340px; text-align: center; box-shadow: 0 0 30px rgba(246, 211, 101, 0.4); }
+        .card-input { width: 100%; background: #000; border: 1px solid #334155; border-radius: 12px; padding: 15px; color: #f6d365; font-size: 24px; text-align: center; letter-spacing: 10px; outline: none; margin-bottom: 20px; }
         .btn { padding: 12px 25px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; width: 100%; }
         .btn-gold { background: var(--gold); color: #000; }
         .cabinet-btn { width: auto; background: rgba(246, 211, 101, 0.1); border: 1px solid var(--gold-solid); color: var(--gold-solid); }
@@ -87,7 +80,7 @@
 <body>
 
 <header>
-    <div class="logo-container" onclick="filterGenre('Hammasi')">
+    <div class="logo-container" onclick="location.reload()">
         <div class="logo-icon">U</div>
         <div class="logo-text">Universal Media</div>
     </div>
@@ -135,11 +128,10 @@
 
 <div id="loginModal" class="modal">
     <div class="admin-card">
-        <div class="card-icon">🔐</div>
         <h2 class="card-title">АДМИН КИРИШ</h2>
         <input type="password" id="passInput" class="card-input" placeholder="••••" maxlength="4">
         <button class="btn btn-gold" onclick="doLogin()">КИРИШ</button>
-        <p onclick="closeLogin()" style="margin-top:20px; cursor:pointer; color:#64748b; font-size:14px; text-decoration:underline;">Бекор қилиш</p>
+        <p onclick="closeLogin()" style="margin-top:20px; cursor:pointer; color:#64748b; text-decoration:underline;">Бекор қилиш</p>
     </div>
 </div>
 
@@ -176,6 +168,10 @@
         Object.keys(moviesData).reverse().forEach(key => {
             const m = moviesData[key];
             if (currentGenre === 'Hammasi' || m.genre === currentGenre) {
+                // Статистикани 0 қилиб кўрсатиш (агар базада йўқ бўлса)
+                const views = m.views || 0;
+                const likes = m.likes || 0;
+
                 const safeEmbed = m.embed.replace('<iframe', '<iframe referrerpolicy="no-referrer"');
                 const card = document.createElement('div');
                 card.className = 'movie-card';
@@ -184,11 +180,27 @@
                     <div class="movie-info">
                         <h3>${m.name}</h3>
                         <span style="color:#64748b; font-size:12px;">#${m.genre}</span>
-                        ${isAdmin ? `<div style="margin-top:10px;"><button onclick="editMovie('${key}')" style="background:#334155; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-right:5px;">✏️</button><button onclick="deleteMovie('${key}')" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🗑</button></div>` : ''}
+                        
+                        <div class="stats-bar">
+                            <div class="stat-btn">👁 <span>${views}</span></div>
+                            <div class="stat-btn" onclick="addLike('${key}')">❤️ <span>${likes}</span></div>
+                        </div>
+
+                        ${isAdmin ? `<div style="margin-top:10px; border-top: 1px solid #333; padding-top:10px;">
+                            <button onclick="editMovie('${key}')" style="background:#334155; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✏️</button>
+                            <button onclick="deleteMovie('${key}')" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🗑</button>
+                        </div>` : ''}
                     </div>
                 `;
                 grid.appendChild(card);
             }
+        });
+    }
+
+    function addLike(key) {
+        // Реал вақтда лайкни биттага ошириш
+        db.ref('movies/' + key + '/likes').transaction(currentLikes => {
+            return (currentLikes || 0) + 1;
         });
     }
 
@@ -222,9 +234,18 @@
         const embed = document.getElementById('mEmbed').value;
         const genre = document.getElementById('mGenre').value;
         const key = document.getElementById('editKey').value;
+
         if(name && embed) {
-            if(key) db.ref('movies/' + key).update({name, embed, genre});
-            else db.ref('movies').push({name, embed, genre});
+            if(key) {
+                db.ref('movies/' + key).update({name, embed, genre});
+            } else {
+                // Янги қўшилганда ҳаммаси 0 бўлади
+                db.ref('movies').push({
+                    name, embed, genre, 
+                    views: 0, 
+                    likes: 0
+                });
+            }
             location.reload();
         }
     }
