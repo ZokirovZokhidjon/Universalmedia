@@ -33,7 +33,6 @@
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
         .movie-card { background: var(--card); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
         
-        /* Видео контейнери */
         .video-container { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 
@@ -87,6 +86,7 @@
         <h2 style="color: var(--gold-solid);">Админ Кириш</h2>
         <input type="password" id="passInput" style="width:100%; padding:12px; margin:20px 0; background:#000; color:white; border:1px solid var(--gold-solid); border-radius:8px; text-align:center;" placeholder="****">
         <button class="btn btn-gold" style="width:100%;" onclick="checkAuth()">Кириш</button>
+        <button class="btn" style="color:#666; margin-top:10px; background:none;" onclick="closeLogin()">Бекор қилиш</button>
     </div>
 </div>
 
@@ -110,7 +110,7 @@
         document.getElementById('adminPanel').style.display = 'block';
     }
 
-    // Рендер функцияси (Энг муҳими)
+    // МАЪЛУМОТЛАРНИ ЧИҚАРИШ
     database.ref('movies').on('value', (snapshot) => {
         const movies = snapshot.val() || {};
         const grid = document.getElementById('movieGrid');
@@ -118,32 +118,28 @@
 
         Object.keys(movies).reverse().forEach(key => {
             const m = movies[key];
-            const card = document.createElement('div');
-            card.className = 'movie-card';
+            const movieCard = document.createElement('div');
+            movieCard.className = 'movie-card';
             
-            // Биз ифраме кодини хавфсиз тарзда ичига жойлаймиз
-            card.innerHTML = `
-                <div class="video-container" id="container-${key}"></div>
+            movieCard.innerHTML = `
+                <div class="video-container">${m.embed}</div>
                 <div class="movie-info">
                     <h3>${m.name}</h3>
                     <p style="color:#64748b; font-size:12px;">#${m.genre}</p>
                 </div>
                 <div class="stats">
-                    <span>👁 ${m.views || 0}</span>
-                    <span>❤️ ${m.likes || 0}</span>
+                    <span onclick="action('${key}', 'views')">👁 ${m.views || 0}</span>
+                    <span onclick="action('${key}', 'likes')">❤️ ${m.likes || 0}</span>
                     <span>⭐ ${(m.rating || 0).toFixed(1)}</span>
                 </div>
                 ${isAdmin ? `
-                    <div style="display:flex; gap:5px; padding:10px;">
+                    <div style="display:flex; gap:5px; padding:10px; border-top:1px solid #333;">
                         <button class="btn btn-gold" style="flex:1; font-size:12px;" onclick="prepareEdit('${key}')">Таҳрир</button>
                         <button class="btn btn-danger" style="flex:1; font-size:12px;" onclick="deleteMovie('${key}')">Ўчириш</button>
                     </div>
                 ` : ''}
             `;
-            grid.appendChild(card);
-            
-            // Ифрамени алоҳида инжект қилиш (хатолик олдини олади)
-            document.getElementById(`container-${key}`).innerHTML = m.embed;
+            grid.appendChild(movieCard);
         });
     });
 
@@ -153,19 +149,28 @@
         const genre = document.getElementById('mGenre').value;
         const key = document.getElementById('editKey').value;
 
-        if(name && embed) {
-            // Ифрамени тозалаб олиш (ортиқча бўшлиқлар учун)
-            const cleanEmbed = embed.trim();
-            const data = { name, embed: cleanEmbed, genre };
-            
-            if(key) {
-                database.ref('movies/' + key).update(data);
-            } else {
-                database.ref('movies').push({
-                    ...data, views: 0, likes: 0, rating: 0, ratingSum: 0, ratingCount: 0
-                });
-            }
-            resetForm();
+        if(!name || !embed) { alert("Маълумот тўлиқ эмас!"); return; }
+
+        const movieData = {
+            name: name,
+            embed: embed,
+            genre: genre
+        };
+
+        if(key) {
+            database.ref('movies/' + key).update(movieData)
+                .then(() => { alert("Янгиланди!"); resetForm(); })
+                .catch(e => console.error(e));
+        } else {
+            database.ref('movies').push({
+                ...movieData,
+                views: 0,
+                likes: 0,
+                rating: 0,
+                ratingSum: 0,
+                ratingCount: 0
+            }).then(() => { alert("Сақланди!"); resetForm(); })
+              .catch(e => console.error(e));
         }
     }
 
@@ -176,31 +181,40 @@
             document.getElementById('mEmbed').value = m.embed;
             document.getElementById('mGenre').value = m.genre;
             document.getElementById('editKey').value = key;
+            document.getElementById('formTitle').innerText = "Таҳрирлаш";
             document.getElementById('adminPanel').style.display = 'block';
-            window.scrollTo(0,0);
+            window.scrollTo({top: 0, behavior: 'smooth'});
         });
     }
 
     function deleteMovie(key) {
-        if(confirm("Ўчирилсинми?")) database.ref('movies/' + key).remove();
+        if(confirm("Ростан ҳам ўчирилсинми?")) {
+            database.ref('movies/' + key).remove();
+        }
+    }
+
+    function action(key, type) {
+        database.ref(`movies/${key}/${type}`).transaction(c => (c || 0) + 1);
     }
 
     function checkAuth() {
-        if(document.getElementById('passInput').value === "1975") {
+        const pass = document.getElementById('passInput').value;
+        if(pass === "1975") {
             localStorage.setItem('isMovieAdmin', 'true');
             location.reload();
-        } else { alert("Хато!"); }
+        } else { alert("Пароль хато!"); }
     }
 
     function resetForm() {
         document.getElementById('mName').value = "";
         document.getElementById('mEmbed').value = "";
         document.getElementById('editKey').value = "";
-        document.getElementById('adminPanel').style.display = 'none';
         document.getElementById('formTitle').innerText = "Фильм қўшиш";
+        document.getElementById('adminPanel').style.display = 'none';
     }
 
     function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
+    function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
     function closeAdmin() { resetForm(); }
     function logout() { localStorage.removeItem('isMovieAdmin'); location.reload(); }
 </script>
