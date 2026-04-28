@@ -3,135 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="no-referrer">
-    <title>Universal Media Portal</title>
+    <title>Universal Media | Янгиликлар</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root {
-            --bg: #0a0a0f;
-            --card: #16161e;
-            --gold: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            --gold-solid: #f6d365;
-            --text: #f1f5f9;
-        }
-
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; }
+        :root { --bg: #0f172a; --card: #1e293b; --gold: #f6d365; --text: #f1f5f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.6; }
         
-        header { 
-            background: var(--card); padding: 15px 5%; display: flex; 
-            justify-content: space-between; align-items: center; 
-            border-bottom: 2px solid rgba(246, 211, 101, 0.3); 
-            position: sticky; top: 0; z-index: 1000; 
-        }
+        header { background: var(--card); padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .logo { font-size: 24px; font-weight: bold; color: var(--gold); text-decoration: none; }
+        .nav-link { background: var(--gold); color: #000; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+        .nav-link:hover { opacity: 0.8; transform: translateY(-2px); }
 
-        .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .logo-icon { width: 40px; height: 40px; background: var(--gold); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; font-size: 24px; }
-        .logo-text { font-size: 22px; font-weight: bold; background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-        .genre-nav { 
-            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; 
-            padding: 20px 5%; background: rgba(255,255,255,0.02);
-        }
-        .genre-btn { 
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(246, 211, 101, 0.2);
-            color: #fff; padding: 10px 20px; border-radius: 30px; cursor: pointer;
-            transition: 0.3s; font-weight: 500;
-        }
-        .genre-btn:hover, .genre-btn.active { 
-            background: var(--gold); color: #000; border-color: transparent; 
-            box-shadow: 0 0 15px rgba(246, 211, 101, 0.3);
-        }
-
-        .admin-panel { 
-            display: none; max-width: 900px; margin: 20px auto; 
-            background: #1c1c24; padding: 25px; border-radius: 15px; 
-            border: 1px solid var(--gold-solid); 
-        }
-        .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .admin-grid input, .admin-grid select, .admin-panel textarea { 
-            width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #fff; border-radius: 8px; box-sizing: border-box;
-        }
-
-        .container { padding: 0 5%; }
-        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; margin-top: 20px; }
-        .movie-card { background: var(--card); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
-        .movie-card:hover { transform: translateY(-5px); border-color: var(--gold-solid); }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .hero { text-align: center; margin-bottom: 50px; }
         
-        .video-container { position: relative; width: 100%; padding-top: 56.25%; background: #000; }
-        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        
-        .movie-info { padding: 15px; }
-        .movie-info h3 { color: var(--gold-solid); margin: 0 0 5px 0; font-size: 18px; }
-        
-        /* СТАТИСТИКА УЧУН СТИЛЛАР */
-        .stats-bar { display: flex; justify-content: space-around; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .stat-btn { background: none; border: none; color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 14px; transition: 0.2s; }
-        .stat-btn:hover { color: #f6d365; }
+        /* Блогспот стилидаги янгиликлар */
+        .news-card { background: var(--card); border-radius: 12px; padding: 25px; margin-bottom: 30px; border-left: 5px solid var(--gold); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .news-date { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .news-title { font-size: 22px; color: var(--gold); margin: 10px 0; }
+        .news-content { color: #cbd5e1; font-size: 16px; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
-        .admin-card { background: #16161e; border: 2px solid #f6d365; border-radius: 25px; padding: 40px; width: 340px; text-align: center; box-shadow: 0 0 30px rgba(246, 211, 101, 0.4); }
-        .card-input { width: 100%; background: #000; border: 1px solid #334155; border-radius: 12px; padding: 15px; color: #f6d365; font-size: 24px; text-align: center; letter-spacing: 10px; outline: none; margin-bottom: 20px; }
-        .btn { padding: 12px 25px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; width: 100%; }
-        .btn-gold { background: var(--gold); color: #000; }
-        .cabinet-btn { width: auto; background: rgba(246, 211, 101, 0.1); border: 1px solid var(--gold-solid); color: var(--gold-solid); }
+        .footer-hidden { text-align: center; padding: 40px; opacity: 0.2; cursor: pointer; font-size: 12px; }
+        
+        /* Modal Style */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; justify-content: center; align-items: center; }
+        .admin-card { background: #16161e; border: 2px solid var(--gold); border-radius: 20px; padding: 40px; width: 300px; text-align: center; }
+        .card-input { width: 100%; background: #000; border: 1px solid #333; padding: 10px; color: var(--gold); font-size: 20px; text-align: center; margin-bottom: 20px; outline: none; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo-container" onclick="location.reload()">
-        <div class="logo-icon">U</div>
-        <div class="logo-text">Universal Media</div>
-    </div>
-    <button class="btn cabinet-btn" id="cabBtn" onclick="handleCabinet()">Шахсий Кабинет</button>
+    <a href="#" class="logo">UNIVERSAL MEDIA</a>
+    <a href="movies.html" class="nav-link">КИНОЛАРГА ЎТИШ →</a>
 </header>
 
-<div class="genre-nav">
-    <button class="genre-btn active" onclick="filterGenre('Hammasi', this)">БАРЧАСИ</button>
-    <button class="genre-btn" onclick="filterGenre('Боевик', this)">БОЕВИК</button>
-    <button class="genre-btn" onclick="filterGenre('Детектив', this)">ДЕТЕКТИВ</button>
-    <button class="genre-btn" onclick="filterGenre('Комедия', this)">КОМЕДИЯ</button>
-    <button class="genre-btn" onclick="filterGenre('Триллер', this)">ТРИЛЛЕР</button>
-    <button class="genre-btn" onclick="filterGenre('Фантастика', this)">ФАНТАСТИКА</button>
-    <button class="genre-btn" onclick="filterGenre('Қўрқинчли', this)">ҚЎРҚИНЧЛИ</button>
-    <button class="genre-btn" onclick="filterGenre('Мелодрама', this)">МЕЛОДРАМА</button>
-    <button class="genre-btn" onclick="filterGenre('Мультфильм', this)">МУЛЬТФИЛЬМ</button>
-</div>
-
-<div id="adminPanel" class="admin-panel">
-    <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom:20px;">
-        <h2 id="formTitle" style="margin:0; color:var(--gold-solid)">Янги Фильм</h2>
-        <button class="btn btn-gold" style="width:auto; background:#ef4444; color:white;" onclick="logout()">Чиқиш</button>
-    </div>
-    <input type="hidden" id="editKey">
-    <div class="admin-grid">
-        <input type="text" id="mName" placeholder="Фильм номи">
-        <select id="mGenre">
-            <option value="Боевик">Боевик</option>
-            <option value="Детектив">Детектив</option>
-            <option value="Комедия">Комедия</option>
-            <option value="Триллер">Триллер</option>
-            <option value="Фантастика">Фантастика</option>
-            <option value="Қўрқинчли">Қўрқинчли</option>
-            <option value="Мелодрама">Мелодрама</option>
-            <option value="Мультфильм">Мультфильм</option>
-        </select>
-    </div>
-    <textarea id="mEmbed" rows="3" style="width:100%; margin-bottom:15px;" placeholder="Embed код (iframe)"></textarea>
-    <button class="btn btn-gold" onclick="saveMovie()">САҚЛАШ</button>
-</div>
-
 <div class="container">
-    <div class="movie-grid" id="movieGrid"></div>
+    <div class="hero">
+        <h1>Сўнгги янгиликлар</h1>
+        <p>Кино олами, актёрлар ва премьералар ҳақида энг қизиқарли хабарлар</p>
+    </div>
+    <div id="newsList">
+        </div>
 </div>
+
+<div class="footer-hidden" onclick="showLogin()">Админ бошқаруви</div>
 
 <div id="loginModal" class="modal">
     <div class="admin-card">
-        <h2 class="card-title">АДМИН КИРИШ</h2>
-        <input type="password" id="passInput" class="card-input" placeholder="••••" maxlength="4">
-        <button class="btn btn-gold" onclick="doLogin()">КИРИШ</button>
-        <p onclick="closeLogin()" style="margin-top:20px; cursor:pointer; color:#64748b; text-decoration:underline;">Бекор қилиш</p>
+        <h3 style="color:var(--gold)">КИРИШ</h3>
+        <input type="password" id="passInput" class="card-input" placeholder="****" maxlength="4">
+        <button onclick="doLogin()" style="width:100%; padding:10px; background:var(--gold); border:none; cursor:pointer; font-weight:bold;">КИРИШ</button>
+        <p onclick="closeLogin()" style="color:#64748b; margin-top:15px; cursor:pointer; font-size:12px;">Ёпиш</p>
     </div>
 </div>
 
@@ -145,122 +69,34 @@
         messagingSenderId: "21945142340",
         appId: "1:21945142340:web:796e1d4e85566899b3c011"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let moviesData = {};
-    let currentGenre = 'Hammasi';
-    let isAdmin = localStorage.getItem('isMovieAdmin') === 'true';
 
-    if(isAdmin) {
-        document.getElementById('adminPanel').style.display = 'block';
-        document.getElementById('cabBtn').innerText = 'Панелни Ёпиш';
-    }
-
-    db.ref('movies').on('value', (snap) => {
-        moviesData = snap.val() || {};
-        render();
+    // Янгиликларни юклаш
+    db.ref('news').on('value', (snap) => {
+        const news = snap.val() || {};
+        const list = document.getElementById('newsList');
+        list.innerHTML = '';
+        Object.keys(news).reverse().forEach(key => {
+            const item = news[key];
+            list.innerHTML += `
+                <div class="news-card">
+                    <div class="news-date">${item.date || ''}</div>
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-content">${item.text}</div>
+                </div>
+            `;
+        });
     });
 
-    function render() {
-        const grid = document.getElementById('movieGrid');
-        grid.innerHTML = '';
-        Object.keys(moviesData).reverse().forEach(key => {
-            const m = moviesData[key];
-            if (currentGenre === 'Hammasi' || m.genre === currentGenre) {
-                // Статистикани 0 қилиб кўрсатиш (агар базада йўқ бўлса)
-                const views = m.views || 0;
-                const likes = m.likes || 0;
-
-                const safeEmbed = m.embed.replace('<iframe', '<iframe referrerpolicy="no-referrer"');
-                const card = document.createElement('div');
-                card.className = 'movie-card';
-                card.innerHTML = `
-                    <div class="video-container">${safeEmbed}</div>
-                    <div class="movie-info">
-                        <h3>${m.name}</h3>
-                        <span style="color:#64748b; font-size:12px;">#${m.genre}</span>
-                        
-                        <div class="stats-bar">
-                            <div class="stat-btn">👁 <span>${views}</span></div>
-                            <div class="stat-btn" onclick="addLike('${key}')">❤️ <span>${likes}</span></div>
-                        </div>
-
-                        ${isAdmin ? `<div style="margin-top:10px; border-top: 1px solid #333; padding-top:10px;">
-                            <button onclick="editMovie('${key}')" style="background:#334155; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">✏️</button>
-                            <button onclick="deleteMovie('${key}')" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🗑</button>
-                        </div>` : ''}
-                    </div>
-                `;
-                grid.appendChild(card);
-            }
-        });
-    }
-
-    function addLike(key) {
-        // Реал вақтда лайкни биттага ошириш
-        db.ref('movies/' + key + '/likes').transaction(currentLikes => {
-            return (currentLikes || 0) + 1;
-        });
-    }
-
-    function filterGenre(genre, btn) {
-        currentGenre = genre;
-        document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        render();
-    }
-
-    function handleCabinet() {
-        if(!isAdmin) document.getElementById('loginModal').style.display = 'flex';
-        else {
-            const p = document.getElementById('adminPanel');
-            p.style.display = p.style.display === 'none' ? 'block' : 'none';
-        }
-    }
-
+    function showLogin() { document.getElementById('loginModal').style.display = 'flex'; }
+    function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
     function doLogin() {
         if(document.getElementById('passInput').value === "1975") {
             localStorage.setItem('isMovieAdmin', 'true');
-            location.reload();
+            window.location.href = "admin.html"; // Админ панелга ўтиш
         } else { alert("Хато!"); }
     }
-
-    function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
-    function logout() { localStorage.removeItem('isMovieAdmin'); location.reload(); }
-
-    function saveMovie() {
-        const name = document.getElementById('mName').value;
-        const embed = document.getElementById('mEmbed').value;
-        const genre = document.getElementById('mGenre').value;
-        const key = document.getElementById('editKey').value;
-
-        if(name && embed) {
-            if(key) {
-                db.ref('movies/' + key).update({name, embed, genre});
-            } else {
-                // Янги қўшилганда ҳаммаси 0 бўлади
-                db.ref('movies').push({
-                    name, embed, genre, 
-                    views: 0, 
-                    likes: 0
-                });
-            }
-            location.reload();
-        }
-    }
-
-    function editMovie(key) {
-        const m = moviesData[key];
-        document.getElementById('mName').value = m.name;
-        document.getElementById('mEmbed').value = m.embed;
-        document.getElementById('mGenre').value = m.genre;
-        document.getElementById('editKey').value = key;
-        document.getElementById('formTitle').innerText = "Таҳрирлаш";
-        window.scrollTo(0,0);
-    }
-
-    function deleteMovie(key) { if(confirm("Ўчирилсинми?")) db.ref('movies/' + key).remove(); }
 </script>
 </body>
 </html>
